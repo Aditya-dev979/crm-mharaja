@@ -1,0 +1,71 @@
+name: Deploy client demo
+
+# Builds the existing Vite production bundle and publishes it to GitHub Pages.
+# This is deployment configuration only — it does not alter the application.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two deployments at once; let a newer push supersede a running one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The repository uses Git LFS for the specification documents.
+          lfs: true
+
+      # pnpm version matches .mise.toml, so CI uses the project's own toolchain.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm exec tsc --noEmit
+
+      - name: Build
+        # GitHub Pages serves this project from /crm-mharaja/, so the asset base
+        # is set through the FIGMA_PUBLIC_URL hook vite.config.ts already reads.
+        # No change to vite.config.ts is required.
+        env:
+          FIGMA_PUBLIC_URL: https://aditya-dev979.github.io/crm-mharaja
+        run: pnpm build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload build output
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
