@@ -1,0 +1,10 @@
+{
+  "description": "An integrated CRM and ERP system for soap and personal-care manufacturing — leads, orders, procurement, production, dispatch and accounts in one connected workspace.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
